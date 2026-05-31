@@ -1,0 +1,6 @@
+# Core analytics use only the Python standard library -- no install needed to
+# run the math, tests, or the text heatmap.
+#
+# These are OPTIONAL, for the two outward-facing features:
+yfinance>=0.2.40      # live option-chain data (free, no API key)
+matplotlib>=3.7       # PNG heatmap (the ASCII heatmap works without it)
