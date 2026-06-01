@@ -1,0 +1,100 @@
+# KRMN option-implied price
+run: 2026-06-01 00:21 UTC
+
+========================================================================
+ KRMN   spot=57.50   as of 2026-06-01T00:21:18
+========================================================================
+
+Reminder: options price RISK (size of move, skew), not DIRECTION.
+The implied forward is cost-of-carry, not a target. RND is
+risk-neutral, not a real-world probability forecast.
+
+------------------------------------------------------------------------
+Expiry 2026-06-18  (~17d)   [LOW confidence - chain mostly NOISE]  quality=0.45
+  implied forward : 57.61   (carry_fallback, R^2=0.00, 2 pairs)
+  expected move   : +/-10.50  (+/-18.2%, 1 sigma ~68%)  [47.10 .. 68.11]
+  ATM implied vol : 84.5%   (straddle x-check 8.38; source=atm_iv)
+  implied distribution: SUPPRESSED (chain too noisy)
+  positioning (open interest) -- market structure, NOT a forecast:
+    call OI=5,048  put OI=2,337  put/call=0.46
+    put wall 50 (support?)  |  call wall 100 (resistance?)  |  max pain 70
+    ! only 2 clean strikes after filtering
+    ! wide median spread (53% of mid)
+    ! put-call parity fit weak (R^2=0.00) -> stale/async quotes
+    ! chain too illiquid/noisy for a reliable implied distribution
+------------------------------------------------------------------------
+Expiry 2026-07-17  (~46d)   [MEDIUM confidence - indicative]  quality=0.47
+  implied forward : 57.79   (carry_fallback, R^2=0.00, 2 pairs)
+  expected move   : +/-16.29  (+/-28.2%, 1 sigma ~68%)  [41.50 .. 74.08]
+  ATM implied vol : 79.4%   (straddle x-check 13.00; source=atm_iv)
+  IV skew (~+/-10%): +3.2 vol pts  (put-skew (downside fear))
+  implied distribution: indicative only (see notes)
+  positioning (open interest) -- market structure, NOT a forecast:
+    call OI=152  put OI=59  put/call=0.39
+    put wall 45 (support?)  |  call wall 65 (resistance?)  |  max pain 65
+    ! wide median spread (37% of mid)
+    ! put-call parity fit weak (R^2=0.00) -> stale/async quotes
+    - RND fit indicative only (elevated pricing error)
+------------------------------------------------------------------------
+Expiry 2026-09-18  (~109d)   [HIGH confidence - clear signal]  quality=0.72
+  implied forward : 58.19   (carry_fallback, R^2=0.00, 2 pairs)
+  expected move   : +/-23.56  (+/-40.5%, 1 sigma ~68%)  [34.64 .. 81.75]
+  ATM implied vol : 75.3%   (straddle x-check 19.10; source=rnd_std)
+  IV skew (~+/-10%): +4.3 vol pts  (put-skew (downside fear))
+  implied distribution percentiles (risk-neutral):
+    P05=26.5  P25=40.0  P50=54.8  P75=72.9  P95=101.3
+    components=2  std=23.56  fit_rmse=0.344
+  positioning (open interest) -- market structure, NOT a forecast:
+    call OI=3,773  put OI=3,165  put/call=0.84
+    put wall 50 (support?)  |  call wall 100 (resistance?)  |  max pain 75
+    ! put-call parity fit weak (R^2=0.00) -> stale/async quotes
+------------------------------------------------------------------------
+Expiry 2026-12-18  (~200d)   [HIGH confidence - clear signal]  quality=0.67
+  implied forward : 58.77   (carry_fallback, R^2=0.00, 2 pairs)
+  expected move   : +/-36.63  (+/-62.3%, 1 sigma ~68%)  [22.14 .. 95.40]
+  ATM implied vol : 72.5%   (straddle x-check 25.18; source=rnd_std)
+  IV skew (~+/-10%): -2.7 vol pts  (call-skew)
+  implied distribution percentiles (risk-neutral):
+    P05=19.0  P25=34.9  P50=54.8  P75=69.2  P95=127.6
+    components=2  std=36.63  fit_rmse=0.524
+  positioning (open interest) -- market structure, NOT a forecast:
+    call OI=1,882  put OI=374  put/call=0.20
+    put wall 40 (support?)  |  call wall 100 (resistance?)  |  max pain 70
+    ! put-call parity fit weak (R^2=0.00) -> stale/async quotes
+------------------------------------------------------------------------
+
+IMPLIED-PRICE HEATMAP (probability cone)
+
+    price |     17     46    109    200
+          +----------------------------
+   186.98 |                            
+   178.10 |                            
+   169.23 |                            
+   160.35 |                            
+   151.47 |                            
+   142.60 |                            
+   133.72 |                            
+   124.84 |                            
+   115.97 |                       .....
+   107.09 |                .....  .....
+    98.21 |  W             W:::: W....~
+    89.34 |                -----  :::::
+    80.46 |         ..... =====~  -----
+    71.59 | W....~ :::::~  W****  W====
+    62.71 |  -----  W----  #####  ++++F
+    53.83 |  W===F  ====F  W%%%F  *****  <- spot
+    44.96 | :::::~ W----~  @@@@@  %%%%%
+    36.08 |         ..... %%%%%~  W@@@@
+    27.20 |                +++++  %%%%%
+    18.33 |                ..... +++++~
+     9.45 |                            
+     0.58 |                            
+          +----------------------------
+          |     lo     me     hi     hi
+
+legend: ' .:-=+*#%@' = low->high implied density | F=forward  ~=+/-1 sigma  | hi/me/lo = confidence  | W=open-interest wall/max-pain (positioning, NOT a forecast)
+note: the forward is cost-of-carry, NOT a price prediction; density is risk-neutral, not real-world probability.
+
+wrote heatmap PNG -> results/KRMN/heatmap.png
+
+(tool exit code: 0)
