@@ -1,0 +1,10 @@
+# KRMM option-implied price
+run: 2026-06-01 00:16 UTC
+
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: KRMM"}}}
+$KRMM: possibly delisted; no price data found  (period=1y) (Yahoo error = "No data found, symbol may be delisted")
+$KRMM: possibly delisted; no price data found  (period=5d) (Yahoo error = "No data found, symbol may be delisted")
+$KRMM: possibly delisted; no price data found  (period=1d) (Yahoo error = "No data found, symbol may be delisted")
+error fetching chain for KRMM: Could not determine spot price for KRMM
+
+(tool exit code: 2)
