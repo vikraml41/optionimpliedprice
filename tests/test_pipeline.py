@@ -107,6 +107,22 @@ def test_noisy_megacap_is_gated_down():
     print("  signal-to-noise gating OK")
 
 
+def test_positioning_layer():
+    prov = SyntheticProvider(SyntheticParams(spot=100.0, base_vol=0.30),
+                             profile="clean")
+    res = analyze_symbol(prov.get_chain("SYN"))
+    ex = next(e for e in res.expiries if abs(e.days - 30) < 1)
+    pos = ex.positioning
+    assert pos is not None and (pos.total_call_oi + pos.total_put_oi) > 0
+    # OI concentrates near the money in the synthetic model -> walls near spot
+    assert pos.call_wall is not None and pos.put_wall is not None
+    assert 80 <= pos.max_pain <= 120, f"max pain off: {pos.max_pain}"
+    # PCR should be a sane positive ratio
+    assert pos.pcr_oi is not None and 0.2 < pos.pcr_oi < 5
+    print(f"  positioning OK: PCR={pos.pcr_oi:.2f} call_wall={pos.call_wall} "
+          f"put_wall={pos.put_wall} max_pain={pos.max_pain}")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     failed = 0

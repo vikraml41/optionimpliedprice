@@ -22,6 +22,10 @@ For each expiration:
   percentiles), *only when the chain can support it*.
 - A **confidence-gated heatmap** — a "probability cone" of expirations × price
   levels, hotter where the market prices more probability mass.
+- **Positioning layer** (`--show-oi`) — open-interest walls (call/put) and
+  max-pain, drawn as a *separate, distinctly-coloured overlay*. This is market
+  *structure / positioning*, **not** a probability forecast, and is never mixed
+  into the density colouring.
 
 ## The anti-noise design
 
@@ -58,6 +62,9 @@ python -m oip.cli AAPL --max-expiries 6 --heatmap aapl.png
 python -m oip.cli --synthetic clean
 python -m oip.cli --synthetic noisy_megacap
 python -m oip.cli --synthetic illiquid        # gets gated to LOW, RND suppressed
+
+# With the open-interest positioning overlay:
+python -m oip.cli --synthetic clean --show-oi --heatmap demo.png
 ```
 
 Useful flags: `--components {1,2,3}` (mixture size), `--rate` (risk-free
@@ -74,11 +81,15 @@ oip/
   filters.py        chain cleaning + signal-to-noise quality score
   rnd.py            lognormal-mixture risk-neutral density (non-neg, forward-matched)
   expectedmove.py   rigorous expected-move calcs
+  positioning.py    open-interest layer: walls, put/call ratio, max pain
   optimize.py       Nelder-Mead (no SciPy dependency)
   analyze.py        orchestration + confidence gating
   report.py         CLI text report
   providers/        synthetic (offline) + yfinance (live) data sources
   viz/heatmap.py    matplotlib PNG + ASCII text heatmap
+  viz/raster.py     stdlib-only PNG rasterizer (matplotlib-free fallback)
+  viz/pngwriter.py  minimal PNG encoder (zlib)
+  viz/font5x7.py    bitmap font for PNG labels
 tests/test_pipeline.py   end-to-end checks (run with: python tests/test_pipeline.py)
 docs/RESEARCH.md         the cited knowledge base behind every design choice
 ```

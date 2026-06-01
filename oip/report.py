@@ -56,6 +56,24 @@ def format_report(a: SymbolAnalysis) -> str:
         else:
             L.append("  implied distribution: SUPPRESSED (chain too noisy)")
 
+        pos = ex.positioning
+        if pos and (pos.total_call_oi + pos.total_put_oi) > 0:
+            L.append("  positioning (open interest) -- market structure, NOT a forecast:")
+            pcr = f"{pos.pcr_oi:.2f}" if pos.pcr_oi is not None else "n/a"
+            L.append(f"    call OI={pos.total_call_oi:,}  put OI={pos.total_put_oi:,}  "
+                     f"put/call={pcr}")
+            walls = []
+            if pos.put_wall is not None:
+                walls.append(f"put wall {pos.put_wall:.0f} (support?)")
+            if pos.call_wall is not None:
+                walls.append(f"call wall {pos.call_wall:.0f} (resistance?)")
+            if pos.max_pain is not None:
+                walls.append(f"max pain {pos.max_pain:.0f}")
+            if walls:
+                L.append("    " + "  |  ".join(walls))
+            for note in pos.notes:
+                L.append(f"    ~ {note}")
+
         for note in ex.quality.notes:
             L.append(f"    ! {note}")
         for note in ex.notes:

@@ -19,6 +19,7 @@ from .expectedmove import ExpectedMove, atm_iv_from_points, expected_move
 from .filters import (CleanPoint, FilterConfig, QualityScore, clean_expiry,
                       compute_quality)
 from .forward import ForwardEstimate, estimate_forward
+from .positioning import Positioning, compute_positioning
 from .rnd import LognormalMixture, calibrate_mixture
 
 
@@ -34,6 +35,7 @@ class ExpiryAnalysis:
     rnd: Optional[LognormalMixture] = None
     rnd_trustworthy: bool = False
     skew_25d: Optional[float] = None      # IV(25d put) - IV(25d call), a skew gauge
+    positioning: Optional[Positioning] = None  # OI layer (NOT a forecast)
     notes: List[str] = field(default_factory=list)
 
     @property
@@ -86,6 +88,9 @@ def analyze_expiry(chain: ExpiryChain, cfg: FilterConfig,
                                           sigma_atm, rnd_std)
 
     res.skew_25d = _skew_25d(points, fwd.forward, chain.ttm_years)
+    # Positioning is computed from the RAW chain, independent of the pricing
+    # filters, and is reported as a separate layer (not mixed into the density).
+    res.positioning = compute_positioning(chain)
     return res
 
 

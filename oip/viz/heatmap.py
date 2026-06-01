@@ -55,14 +55,17 @@ def _column_density(ex: ExpiryAnalysis, grid: List[float]):
 # ---------------------------------------------------------------------------
 # Matplotlib renderer
 # ---------------------------------------------------------------------------
-def render_png(analysis: SymbolAnalysis, path: str, n_price=200) -> Optional[str]:
+def render_png(analysis: SymbolAnalysis, path: str, n_price=200,
+               show_oi=False) -> Optional[str]:
     try:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         import numpy as np
     except ImportError:
-        return None
+        # Fall back to the stdlib-only rasterizer so the PNG works without deps.
+        from .raster import render as render_raster
+        return render_raster(analysis, path, show_oi=show_oi)
 
     grid = _price_grid(analysis, n=n_price)
     exps = [e for e in analysis.expiries if e.expected_move is not None]
@@ -94,6 +97,29 @@ def render_png(analysis: SymbolAnalysis, path: str, n_price=200) -> Optional[str
     lo = [e.forward.forward - e.expected_move.move_1sigma for e in exps]
     ax.plot(xs, hi, color="lime", lw=1.0, ls="--", alpha=0.8, label="+/-1 sigma expected move")
     ax.plot(xs, lo, color="lime", lw=1.0, ls="--", alpha=0.8)
+
+    # Positioning overlay (separate layer): OI walls + max pain, distinct colors.
+    if show_oi:
+        for ex in exps:
+            pos = ex.positioning
+            if not pos:
+                continue
+            if pos.call_wall is not None:
+                ax.scatter([ex.days], [pos.call_wall], marker="_", s=260,
+                           color="#ff7b7b", zorder=5)
+            if pos.put_wall is not None:
+                ax.scatter([ex.days], [pos.put_wall], marker="_", s=260,
+                           color="#7fb3ff", zorder=5)
+            if pos.max_pain is not None:
+                ax.scatter([ex.days], [pos.max_pain], marker="x", s=40,
+                           color="white", zorder=5)
+        # legend proxies
+        from matplotlib.lines import Line2D
+        handles, labels = ax.get_legend_handles_labels()
+        handles += [Line2D([0], [0], color="#ff7b7b", lw=2, label="call wall (OI)"),
+                    Line2D([0], [0], color="#7fb3ff", lw=2, label="put wall (OI)"),
+                    Line2D([0], [0], marker="x", color="white", lw=0, label="max pain")]
+        ax.legend(handles=handles, loc="upper left", fontsize=8, framealpha=0.3)
 
     # Mark low-confidence expiries.
     for ex in exps:
@@ -129,7 +155,8 @@ def _edges(centers):
 _SHADES = " .:-=+*#%@"
 
 
-def render_text(analysis: SymbolAnalysis, rows=22, use_color=True) -> str:
+def render_text(analysis: SymbolAnalysis, rows=22, use_color=True,
+                show_oi=False) -> str:
     exps = [e for e in analysis.expiries if e.expected_move is not None]
     if not exps:
         return "(no analyzable expiries)"
@@ -154,15 +181,29 @@ def render_text(analysis: SymbolAnalysis, rows=22, use_color=True) -> str:
     lines.append(header)
     lines.append(" " * 9 + " +" + "-" * (cw * len(exps)))
 
+    # Pre-extract OI walls per expiry for the (separate) positioning overlay.
+    walls = []
+    for ex in exps:
+        ks = set()
+        if show_oi and ex.positioning:
+            for attr in ("call_wall", "put_wall", "max_pain"):
+                v = getattr(ex.positioning, attr)
+                if v is not None:
+                    ks.add(v)
+        walls.append(ks)
+
     for r, price in enumerate(grid):
         cells = ""
         for j, ex in enumerate(exps):
             intensity = cols[j][r]
             ch = _SHADES[min(len(_SHADES) - 1, int(intensity * (len(_SHADES) - 1)))]
             cell = ch * (cw - 2)
-            # mark forward (F) and expected-move band edges (|)
+            # mark forward (F) and expected-move band edges (~)
             if abs(price - forwards[j]) <= _half_step(grid, r):
                 cell = cell[:-1] + "F" if cell else "F"
+            # positioning overlay: OI walls as 'W' (kept visually distinct)
+            if any(abs(price - k) <= _half_step(grid, r) for k in walls[j]):
+                cell = "W" + cell[1:] if cell else "W"
             mark = ""
             if abs(price - em_hi[j]) <= _half_step(grid, r) or \
                abs(price - em_lo[j]) <= _half_step(grid, r):
@@ -179,8 +220,11 @@ def render_text(analysis: SymbolAnalysis, rows=22, use_color=True) -> str:
     lines.append(" " * 9 + " +" + "-" * (cw * len(exps)))
     lines.append(conf)
     lines.append("")
-    lines.append("legend: '" + _SHADES + "' = low->high implied density | "
-                 "F=forward  ~=+/-1 sigma  | hi/me/lo = confidence")
+    legend = ("legend: '" + _SHADES + "' = low->high implied density | "
+              "F=forward  ~=+/-1 sigma  | hi/me/lo = confidence")
+    if show_oi:
+        legend += "  | W=open-interest wall/max-pain (positioning, NOT a forecast)"
+    lines.append(legend)
     lines.append("note: the forward is cost-of-carry, NOT a price prediction; "
                  "density is risk-neutral, not real-world probability.")
     return "\n".join(lines)

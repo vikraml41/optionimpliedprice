@@ -40,6 +40,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-text-heatmap", action="store_true",
                    help="suppress the ASCII heatmap")
     p.add_argument("--no-color", action="store_true")
+    p.add_argument("--show-oi", action="store_true",
+                   help="overlay the open-interest positioning layer "
+                        "(walls / max pain) -- shown separately, NOT a forecast")
     # filter overrides
     p.add_argument("--min-oi", type=int, default=0)
     p.add_argument("--min-price", type=float, default=0.10)
@@ -86,10 +89,11 @@ def main(argv=None) -> int:
 
     if not args.no_text_heatmap:
         print("\nIMPLIED-PRICE HEATMAP (probability cone)\n")
-        print(render_text(analysis, use_color=not args.no_color))
+        print(render_text(analysis, use_color=not args.no_color,
+                          show_oi=args.show_oi))
 
     if args.heatmap:
-        out = render_png(analysis, args.heatmap)
+        out = render_png(analysis, args.heatmap, show_oi=args.show_oi)
         if out:
             print(f"\nwrote heatmap PNG -> {out}")
         else:
