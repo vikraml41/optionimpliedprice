@@ -1,0 +1,116 @@
+name: Option-Implied Price
+
+# Run this from your PHONE: GitHub mobile app -> repo -> Actions ->
+# "Option-Implied Price" -> Run workflow -> type a ticker. When it finishes
+# (you'll get a notification), the report + heatmap are committed under
+# results/<TICKER>/ for you to browse in the app.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ticker:
+        description: "Ticker symbol (e.g. AAPL, NVDA, SPY)"
+        required: true
+        default: "AAPL"
+      max_expiries:
+        description: "How many expirations to analyze"
+        required: false
+        default: "6"
+      components:
+        description: "Lognormal mixture components (1-3)"
+        required: false
+        default: "2"
+      show_oi:
+        description: "Overlay open-interest positioning layer"
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: write   # needed to commit the results back
+
+concurrency:
+  group: implied-price-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install live-data + plotting deps
+        run: pip install --quiet yfinance matplotlib
+
+      - name: Sanitize ticker
+        id: tick
+        run: |
+          RAW="${{ github.event.inputs.ticker }}"
+          # keep only safe ticker chars, uppercase
+          SAFE=$(printf '%s' "$RAW" | tr '[:lower:]' '[:upper:]' | tr -cd 'A-Z0-9.^-')
+          if [ -z "$SAFE" ]; then echo "empty/invalid ticker" >&2; exit 1; fi
+          echo "symbol=$SAFE" >> "$GITHUB_OUTPUT"
+
+      - name: Run analysis
+        id: run
+        env:
+          SYM: ${{ steps.tick.outputs.symbol }}
+          MAXE: ${{ github.event.inputs.max_expiries }}
+          COMP: ${{ github.event.inputs.components }}
+          SHOWOI: ${{ github.event.inputs.show_oi }}
+        run: |
+          OUTDIR="results/$SYM"
+          mkdir -p "$OUTDIR"
+          OI_FLAG=""
+          if [ "$SHOWOI" = "true" ]; then OI_FLAG="--show-oi"; fi
+
+          echo "# $SYM option-implied price" > "$OUTDIR/report.txt"
+          echo "run: $(date -u '+%Y-%m-%d %H:%M UTC')" >> "$OUTDIR/report.txt"
+          echo "" >> "$OUTDIR/report.txt"
+
+          # Don't fail the job if the tool exits non-zero (e.g. no data after hours);
+          # capture everything into the report so you still see what happened.
+          set +e
+          python -m oip.cli "$SYM" \
+            --max-expiries "$MAXE" --components "$COMP" $OI_FLAG \
+            --no-color --heatmap "$OUTDIR/heatmap.png" \
+            >> "$OUTDIR/report.txt" 2>&1
+          CODE=$?
+          set -e
+          echo "" >> "$OUTDIR/report.txt"
+          echo "(tool exit code: $CODE)" >> "$OUTDIR/report.txt"
+
+          # Mirror the report into the run summary (readable on mobile).
+          {
+            echo "## $SYM — option-implied price";
+            echo '```';
+            cat "$OUTDIR/report.txt";
+            echo '```';
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Attach heatmap to the run (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.tick.outputs.symbol }}-heatmap
+          path: results/${{ steps.tick.outputs.symbol }}/
+          if-no-files-found: warn
+
+      - name: Commit results to the repo
+        env:
+          SYM: ${{ steps.tick.outputs.symbol }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f "results/$SYM/"
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "results: $SYM option-implied price ($(date -u '+%Y-%m-%d %H:%M UTC')) [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          fi

@@ -1,6 +1,8 @@
 __pycache__/
 *.pyc
 *.png
+# ...but DO keep the committed run outputs (the phone-delivery feature):
+!results/**/*.png
 .venv/
 venv/
 .DS_Store

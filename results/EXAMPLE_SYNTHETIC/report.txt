@@ -1,0 +1,91 @@
+========================================================================
+ CLEAN   spot=100.00   as of synthetic
+========================================================================
+
+Reminder: options price RISK (size of move, skew), not DIRECTION.
+The implied forward is cost-of-carry, not a target. RND is
+risk-neutral, not a real-world probability forecast.
+
+------------------------------------------------------------------------
+Expiry +7d  (~7d)   [HIGH confidence - clear signal]  quality=0.76
+  implied forward : 100.08   (parity, R^2=1.00, 11 pairs)
+  expected move   : +/-4.41  (+/-4.4%, 1 sigma ~68%)  [95.67 .. 104.48]
+  ATM implied vol : 30.2%   (straddle x-check 3.33; source=rnd_std)
+  IV skew (~+/-10%): +2.0 vol pts  (put-skew (downside fear))
+  implied distribution percentiles (risk-neutral):
+    P05=92.6  P25=97.5  P50=100.1  P75=102.6  P95=107.6
+    components=2  std=4.41  fit_rmse=0.017
+  positioning (open interest) -- market structure, NOT a forecast:
+    call OI=21,368  put OI=21,379  put/call=1.00
+    put wall 100 (support?)  |  call wall 100 (resistance?)  |  max pain 100
+------------------------------------------------------------------------
+Expiry +30d  (~30d)   [HIGH confidence - clear signal]  quality=0.93
+  implied forward : 100.33   (parity, R^2=1.00, 11 pairs)
+  expected move   : +/-9.84  (+/-9.8%, 1 sigma ~68%)  [90.49 .. 110.17]
+  ATM implied vol : 30.3%   (straddle x-check 6.94; source=rnd_std)
+  IV skew (~+/-10%): +3.9 vol pts  (put-skew (downside fear))
+  implied distribution percentiles (risk-neutral):
+    P05=83.3  P25=95.5  P50=100.5  P75=105.2  P95=116.7
+    components=2  std=9.84  fit_rmse=0.096
+  positioning (open interest) -- market structure, NOT a forecast:
+    call OI=21,423  put OI=21,443  put/call=1.00
+    put wall 100 (support?)  |  call wall 100 (resistance?)  |  max pain 102
+------------------------------------------------------------------------
+Expiry +60d  (~60d)   [HIGH confidence - clear signal]  quality=0.93
+  implied forward : 100.66   (parity, R^2=1.00, 11 pairs)
+  expected move   : +/-14.84  (+/-14.7%, 1 sigma ~68%)  [85.82 .. 115.49]
+  ATM implied vol : 30.5%   (straddle x-check 9.92; source=rnd_std)
+  IV skew (~+/-10%): +4.1 vol pts  (put-skew (downside fear))
+  implied distribution percentiles (risk-neutral):
+    P05=74.9  P25=94.3  P50=100.9  P75=107.0  P95=125.0
+    components=2  std=14.84  fit_rmse=0.246
+  positioning (open interest) -- market structure, NOT a forecast:
+    call OI=21,487  put OI=21,504  put/call=1.00
+    put wall 100 (support?)  |  call wall 100 (resistance?)  |  max pain 102
+------------------------------------------------------------------------
+Expiry +120d  (~120d)   [HIGH confidence - clear signal]  quality=0.90
+  implied forward : 101.32   (parity, R^2=1.00, 11 pairs)
+  expected move   : +/-22.87  (+/-22.6%, 1 sigma ~68%)  [78.46 .. 124.19]
+  ATM implied vol : 30.4%   (straddle x-check 14.11; source=rnd_std)
+  IV skew (~+/-10%): +2.7 vol pts  (put-skew (downside fear))
+  implied distribution percentiles (risk-neutral):
+    P05=62.9  P25=93.7  P50=101.8  P75=108.5  P95=139.9
+    components=2  std=22.87  fit_rmse=0.517
+  positioning (open interest) -- market structure, NOT a forecast:
+    call OI=21,644  put OI=21,653  put/call=1.00
+    put wall 100 (support?)  |  call wall 102 (resistance?)  |  max pain 102
+------------------------------------------------------------------------
+
+IMPLIED-PRICE HEATMAP (probability cone)
+
+    price |      7     30     60    120
+          +----------------------------
+   181.36 |                            
+   173.74 |                            
+   166.11 |                            
+   158.49 |                            
+   150.87 |                            
+   143.25 |                            
+   135.62 |                            
+   128.00 |                            
+   120.38 |                .....      ~
+   112.76 |        .....~ :::::~  -----
+   105.13 | =====~  W####  W@@@@  W@@@@
+    97.51 | W@@@F~  W@@@F  W%%%F  W***F  <- spot
+    89.89 |        :::::~  :::::  .....
+    82.27 |         ..... .....~ .....~
+    74.64 |                ..... .....~
+    67.02 |                       .....
+    59.40 |                            
+    51.78 |                            
+    44.15 |                            
+    36.53 |                            
+    28.91 |                            
+    21.29 |                            
+          +----------------------------
+          |     hi     hi     hi     hi
+
+legend: ' .:-=+*#%@' = low->high implied density | F=forward  ~=+/-1 sigma  | hi/me/lo = confidence  | W=open-interest wall/max-pain (positioning, NOT a forecast)
+note: the forward is cost-of-carry, NOT a price prediction; density is risk-neutral, not real-world probability.
+
+wrote heatmap PNG -> results/EXAMPLE_SYNTHETIC/heatmap.png
